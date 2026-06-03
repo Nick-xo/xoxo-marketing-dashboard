@@ -1,0 +1,1459 @@
+<!doctype html>
+<script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Xoxo Marketing Dashboard",
+  "schemaVersion": 1,
+  "description": "Live XOXO marketing dashboard. Shopify pulls from Shopify MCP on every open. Instagram, LinkedIn and TikTok organic all pull from Windsor.ai on every open (followers, daily series, content metrics, prior-period deltas). Competitor section is a manual web scrape (refreshed in-chat) until competitor handles are added to Windsor's instagram_public connector.",
+  "mcpTools": ["mcp__25c9f97f-8a4b-421f-aacd-807288122f50__run-analytics-query", "mcp__76469468-e95e-4c6a-b88c-0d490394f2e1__get_data"],
+  "mcpServerNames": ["Shopify", "Windsor.ai"]
+}
+</script>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>XOXO Dashboard · Snapshot 03 Jun 2026</title>
+<style>
+:root {
+  color-scheme: light;
+  --red: #F40002;
+  --green: #00D707;
+  --yellow: #F8D325;
+  --orange: #FF4E00;
+  --purple: #6A1EE2;
+  --pink: #FFB9E6;
+  --pink-soft: #FFF0F9;
+  --ink: #0D0D0D;
+  --paper: #FFFFFF;
+  --muted: #6b6b6b;
+  --soft: #f4f1ea;
+  --display: "Arial Black", "Helvetica Neue", "Inter", system-ui, sans-serif;
+  --body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.5; }
+a { color: var(--red); text-decoration: none; font-weight: 700; }
+a:hover { text-decoration: underline; }
+
+/* HERO header - full bleed red */
+.hero { background: var(--red); color: var(--paper); padding: 30px 24px 26px; position: relative; overflow: hidden; }
+.hero::before { content: "♡"; position: absolute; top: -36px; right: -24px; font-size: 240px; color: rgba(255,255,255,0.10); line-height: 1; pointer-events: none; font-family: var(--body); }
+.hero::after { content: "✦"; position: absolute; bottom: 14px; left: 22%; font-size: 30px; color: rgba(255,255,255,0.30); pointer-events: none; }
+.hero-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; position: relative; z-index: 1; flex-wrap: wrap; }
+.hero h1 { margin: 0; font-family: var(--display); font-weight: 900; font-size: 40px; letter-spacing: -0.035em; line-height: 0.92; text-transform: uppercase; }
+.hero h1 .sup { font-size: 13px; vertical-align: super; letter-spacing: 0; font-weight: 700; opacity: 0.9; }
+.hero h1 .hrt { display: inline-block; transform: translateY(-2px); margin-left: 6px; }
+.hero .tagline { margin-top: 10px; font-size: 13px; font-style: italic; opacity: 0.95; font-weight: 500; }
+.hero-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.daterange { display: inline-flex; gap: 0; background: var(--ink); border-radius: 100px; padding: 3px; border: 2px solid var(--ink); }
+.daterange button { background: transparent; border: 0; padding: 6px 14px; font-size: 11px; color: var(--paper); border-radius: 100px; cursor: pointer; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+.daterange button.active { background: var(--paper); color: var(--ink); }
+.refreshed { color: var(--paper); font-size: 10.5px; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+
+.wrap { max-width: 1200px; margin: 0 auto; padding: 26px 24px 64px; }
+
+/* Overview strip */
+.strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 28px; }
+.kpi { background: var(--paper); border: 2px solid var(--ink); border-radius: 14px; padding: 14px 16px; position: relative; }
+.kpi .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); font-weight: 800; }
+.kpi .val { font-family: var(--display); font-weight: 900; font-size: 26px; margin-top: 6px; letter-spacing: -0.03em; color: var(--ink); line-height: 1; }
+.kpi .delta { font-size: 11px; margin-top: 8px; color: var(--muted); font-weight: 600; }
+.kpi .delta.up { color: #007a1a; }
+.kpi .delta.down { color: var(--red); }
+.kpi.muted .val { color: #b5b5b5; font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
+.kpi.accent { background: var(--red); color: var(--paper); border-color: var(--red); }
+.kpi.accent .label, .kpi.accent .val, .kpi.accent .delta { color: var(--paper); }
+
+/* Tabs - pill style */
+.tabs { display: flex; gap: 6px; margin-bottom: 24px; flex-wrap: wrap; }
+.tabs button { background: var(--paper); border: 2px solid var(--ink); padding: 8px 16px; font-size: 11.5px; font-weight: 800; color: var(--ink); cursor: pointer; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.06em; transition: all 0.12s; font-family: var(--body); }
+.tabs button:hover { background: var(--soft); }
+.tabs button.active { background: var(--ink); color: var(--paper); }
+
+/* Sections */
+.section { display: none; }
+.section.active { display: block; }
+.section > h2 { margin: 0 0 6px; font-family: var(--display); font-weight: 900; font-size: 24px; letter-spacing: -0.025em; text-transform: uppercase; line-height: 1; }
+.section > .h-sub { color: var(--muted); font-size: 12.5px; margin-bottom: 20px; font-weight: 500; }
+
+.card { background: var(--paper); border: 2px solid var(--ink); border-radius: 14px; padding: 20px; margin-bottom: 14px; }
+.card-row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.card-row-3 .card { margin: 0; }
+
+.card h3 { margin: 0 0 12px; font-family: var(--display); font-weight: 900; font-size: 15px; letter-spacing: -0.01em; text-transform: uppercase; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.card h3 .badge { font-size: 9.5px; font-weight: 800; padding: 3px 9px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.07em; border: 1.5px solid var(--ink); }
+.badge.connected { background: var(--green); color: var(--ink); }
+.badge.pending { background: var(--yellow); color: var(--ink); }
+.card h3 .h-sub { font-size: 11px; font-weight: 600; color: var(--muted); margin-left: auto; text-transform: none; letter-spacing: 0; font-family: var(--body); }
+
+.connect-box { background: var(--pink-soft); border: 2px dashed var(--pink); border-radius: 12px; padding: 14px 16px; margin-top: 14px; }
+.connect-box .ctitle { font-weight: 800; color: var(--ink); font-size: 11.5px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.07em; }
+.connect-box .ctitle::before { content: "♡ "; color: var(--red); }
+.connect-box .cbody { color: #3a1f2e; font-size: 12.5px; line-height: 1.6; }
+.connect-box .cbody strong { color: var(--red); font-weight: 800; }
+.connect-box .cbody code { background: var(--paper); padding: 1px 6px; border-radius: 4px; font-size: 11.5px; border: 1px solid var(--pink); font-family: "SF Mono", "Monaco", Menlo, monospace; }
+
+.metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 12px 0; }
+.metric-grid .m { background: var(--soft); border: 1.5px solid var(--ink); border-radius: 10px; padding: 12px 14px; }
+.metric-grid .m .lbl { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink); font-weight: 800; opacity: 0.65; }
+.metric-grid .m .v { font-family: var(--display); font-weight: 900; font-size: 22px; margin-top: 4px; letter-spacing: -0.02em; line-height: 1; }
+.metric-grid .m .d { font-size: 10.5px; color: var(--muted); margin-top: 5px; font-weight: 600; }
+.metric-grid .m .d.up { color: #007a1a; }
+.metric-grid .m .d.down { color: var(--red); }
+
+.chart-wrap { height: 200px; margin-top: 14px; position: relative; }
+.chart-wrap.tall { height: 260px; }
+
+/* Competitor table */
+.comp-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+.comp-table th { text-align: left; padding: 10px 12px; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); font-weight: 800; border-bottom: 2px solid var(--ink); }
+.comp-table td { padding: 12px 12px; border-bottom: 1px solid var(--soft); vertical-align: middle; }
+.comp-table tr:last-child td { border-bottom: 0; }
+.comp-table tr.us { background: var(--pink-soft); }
+.comp-table tr.us td:first-child { font-family: var(--display); font-weight: 900; text-transform: uppercase; letter-spacing: -0.01em; color: var(--red); }
+.comp-table tr.us td:first-child::after { content: " ♡"; color: var(--red); }
+.comp-table .handle { color: var(--muted); font-size: 12px; font-family: "SF Mono", "Monaco", Menlo, monospace; }
+.comp-table .num { font-family: var(--display); font-variant-numeric: tabular-nums; font-weight: 900; letter-spacing: -0.015em; }
+.comp-table .delta { font-size: 12px; font-weight: 800; }
+.comp-table .delta.up { color: #007a1a; }
+.comp-table .delta.down { color: var(--red); }
+.comp-table .pending { color: #8a6500; font-size: 11.5px; font-weight: 600; font-style: italic; }
+
+/* Posts tables */
+.posts-section { margin-top: 18px; }
+.posts-section h4 { margin: 0 0 10px; font-family: var(--display); font-size: 11.5px; font-weight: 900; color: var(--ink); text-transform: uppercase; letter-spacing: 0.07em; }
+.posts-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; background: var(--paper); border: 1.5px solid var(--ink); border-radius: 10px; overflow: hidden; }
+.posts-table th { text-align: left; padding: 9px 11px; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink); font-weight: 800; background: var(--soft); border-bottom: 1.5px solid var(--ink); }
+.posts-table th.num, .posts-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.posts-table td { padding: 10px 11px; border-bottom: 1px solid var(--soft); vertical-align: top; }
+.posts-table tr:last-child td { border-bottom: 0; }
+.posts-table .empty-row td { text-align: center; color: #8a6500; padding: 24px 11px; font-style: italic; background: #fffbe8; font-weight: 500; }
+.posts-table .pill { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 100px; background: var(--soft); color: var(--ink); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid var(--ink); }
+.posts-table .caption { color: var(--muted); max-width: 280px; }
+
+/* Sticker - SHOW YOURSELF SOME LOVE */
+.sticker { display: inline-block; background: var(--yellow); color: var(--ink); border: 2px solid var(--ink); border-radius: 100px; padding: 6px 14px; font-family: var(--display); font-weight: 900; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; transform: rotate(-2deg); box-shadow: 3px 3px 0 var(--ink); }
+.sticker .sup { font-size: 8px; vertical-align: super; letter-spacing: 0; margin-left: 1px; }
+
+.notes-box { font-size: 12.5px; color: var(--ink); line-height: 1.7; }
+.notes-box strong { color: var(--red); font-weight: 800; }
+
+/* Footer */
+.footer { margin-top: 36px; padding-top: 22px; border-top: 2px solid var(--ink); }
+.footer-note { color: var(--muted); font-size: 11.5px; line-height: 1.65; margin-bottom: 16px; }
+.footer-note strong { color: var(--ink); font-weight: 800; }
+.footer-brand { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.footer-tag { font-family: var(--display); font-weight: 900; font-size: 16px; text-transform: uppercase; letter-spacing: -0.01em; color: var(--ink); }
+.footer-tag .sep { color: var(--red); padding: 0 6px; }
+.footer-tag .sup { font-size: 10px; vertical-align: super; letter-spacing: 0; }
+
+@media (max-width: 800px) {
+  .strip { grid-template-columns: repeat(2, 1fr); }
+  .metric-grid { grid-template-columns: repeat(2, 1fr); }
+  .card-row-3 { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 30px; }
+}
+</style>
+</head>
+<body>
+  <!-- SNAPSHOT PASSWORD GATE -->
+  <div id="pass-gate" style="position:fixed;inset:0;z-index:99999;background:#1a1a2e;display:flex;align-items:center;justify-content:center;">
+    <div style="background:#faf9f4;border:3px solid #1a1a2e;border-radius:12px;padding:40px;max-width:360px;width:90%;text-align:center;">
+      <div style="font-family:'Arial Black',Arial,sans-serif;font-size:22px;font-weight:900;color:#F40002;letter-spacing:-0.02em;margin-bottom:4px;">XOXO SODA</div>
+      <div style="font-family:'Arial Black',Arial,sans-serif;font-size:11px;font-weight:900;color:#1a1a2e;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:24px;">Marketing Dashboard · Snapshot</div>
+      <input type="password" id="pass-input" placeholder="Enter password" style="width:100%;box-sizing:border-box;padding:10px 14px;border:2px solid #1a1a2e;border-radius:8px;font-size:15px;font-family:Arial,sans-serif;outline:none;margin-bottom:12px;" />
+      <button onclick="(function(){var v=document.getElementById('pass-input').value;if(v==='Xoxo1234'){sessionStorage.setItem('xoxo-auth','1');document.getElementById('pass-gate').style.display='none';}else{document.getElementById('pass-input').style.outline='2px solid #F40002';}})()" style="width:100%;padding:10px;background:#F40002;color:#fff;border:none;border-radius:8px;font-family:'Arial Black',Arial,sans-serif;font-size:14px;font-weight:900;letter-spacing:0.06em;cursor:pointer;text-transform:uppercase;">Enter</button>
+    </div>
+  </div>
+  <script>
+    (function(){
+      if(sessionStorage.getItem('xoxo-auth')==='1'){document.getElementById('pass-gate').style.display='none';return;}
+      document.getElementById('pass-input').addEventListener('keydown',function(e){if(e.key==='Enter')document.querySelector('#pass-gate button').click();});
+    })();
+  </script>
+  <!-- SNAPSHOT BANNER -->
+  <div id="snap-banner" style="position:fixed;top:0;left:0;right:0;z-index:9998;background:#1a1a2e;color:#e5e0d4;text-align:center;padding:5px 12px;font-size:10px;font-weight:700;letter-spacing:0.07em;font-family:Arial,sans-serif;">
+    SNAPSHOT · Data through 02 Jun 2026 · Generated 03 Jun 2026 · <a href="https://nick-xo.github.io/xoxo-marketing-dashboard/" style="color:#F40002;text-decoration:none;">↻ GitHub Pages (this page)</a>
+  </div>
+  <style>#wrapper{padding-top:28px;}.hero{margin-top:0!important;}</style>
+
+
+<div class="hero">
+  <div class="hero-inner">
+    <div>
+      <h1>XOXO Marketing<span class="hrt">♡</span><br>Dashboard <span class="sup">v1</span></h1>
+      <div class="tagline">The soda that loves you back. Now with metrics.</div>
+    </div>
+    <div class="hero-right">
+      <div class="sticker">Show yourself some love<span class="sup">®</span></div>
+      <div class="daterange" id="daterange">
+        <button data-range="7" class="active">7d</button>
+        <button data-range="28">28d</button>
+        <button data-range="90">90d</button>
+      </div>
+      <div class="refreshed" id="refreshed"></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- Overview strip -->
+  <div class="strip">
+    <div class="kpi muted">
+      <div class="label">Total followers</div>
+      <div class="val" id="kpi-followers">Connect sources</div>
+      <div class="delta">IG + LinkedIn + TikTok</div>
+    </div>
+    <div class="kpi muted" id="kpi-wow-card">
+      <div class="label">WoW growth</div>
+      <div class="val" id="kpi-wow">--</div>
+      <div class="delta">Awaiting connection</div>
+    </div>
+    <div class="kpi accent" data-tile="d2c_rev">
+      <div class="label">D2C revenue (<span class="period-label">28d</span>)</div>
+      <div class="val">£20,052</div>
+      <div class="delta up">↑ 14.9% vs prior 28d</div>
+    </div>
+    <div class="kpi" data-tile="d2c_units">
+      <div class="label">D2C units (<span class="period-label">28d</span>)</div>
+      <div class="val">851</div>
+      <div class="delta up">↑ 26.4% vs prior 28d</div>
+    </div>
+    <div class="kpi muted" id="kpi-er-card">
+      <div class="label">Engagement rate</div>
+      <div class="val" id="kpi-er-blend">--</div>
+      <div class="delta">IG + TikTok blended</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs" id="tabs">
+    <button data-tab="owned" class="active">Social media</button>
+    <button data-tab="shopify">D2C</button>
+    <button data-tab="email">Email</button>
+    <button data-tab="competitors">Competitors</button>
+    <button data-tab="extended">Extended</button>
+  </div>
+
+  <!-- Owned channels -->
+  <div class="section active" data-section="owned">
+    <h2>Social media</h2>
+    <div class="h-sub">Instagram, LinkedIn and TikTok organic all pull live from Windsor.ai on every open (followers, daily growth, content metrics, prior-period deltas). Top posts tables remain May snapshot until per-media Windsor calls are wired.</div>
+
+
+    <div class="card">
+      <h3>Instagram <span class="badge connected" id="ig-badge">Live</span> <span class="h-sub" id="ig-subhead">@xoxo.soda · Windsor.ai · Meta Graph API</span></h3>
+      <div class="metric-grid">
+        <div class="m" id="igFollowersTile"><div class="lbl">Followers</div><div class="v">10,446</div><div class="d up">↑ 9.4% vs May snapshot</div></div>
+        <div class="m" data-tile="ig_reach"><div class="lbl">Reach (<span class="period-label">28d</span>)</div><div class="v">132,021</div><div class="d up">↑ 12.6% vs prior 28d</div></div>
+        <div class="m" data-tile="ig_inter"><div class="lbl">Interactions (<span class="period-label">28d</span>)</div><div class="v">4,762</div><div class="d down">↓ 15.3% vs prior 5,620</div></div>
+        <div class="m" data-tile="ig_er"><div class="lbl">Engagement rate</div><div class="v">3.61%</div><div class="d">interactions / reach</div></div>
+      </div>
+      <div class="metric-grid" style="margin-top: 0;">
+        <div class="m" data-tile="ig_posts"><div class="lbl">Posts (<span class="period-label">28d</span>)</div><div class="v">16</div><div class="d">8 reels · 6 carousel · 2 image</div></div>
+        <div class="m" data-tile="ig_likes"><div class="lbl">Likes (<span class="period-label">28d</span>)</div><div class="v">1,274</div><div class="d">Avg 80/post</div></div>
+        <div class="m" data-tile="ig_shares"><div class="lbl">Shares (<span class="period-label">28d</span>)</div><div class="v">154</div><div class="d">Top: 48 on Piccadilly</div></div>
+        <div class="m" data-tile="ig_saves"><div class="lbl">Saves (<span class="period-label">28d</span>)</div><div class="v">69</div><div class="d">Top: 23 on Piccadilly</div></div>
+      </div>
+      <h4 style="margin: 20px 0 8px; font-family: var(--display); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">Daily reach + interactions (<span class="period-label">28d</span>) ♡</h4>
+      <div class="chart-wrap tall"><canvas id="igReachChart"></canvas></div>
+      <div class="posts-section">
+        <h4>Top posts (last 28d) — sorted by engagement ✦</h4>
+        <table class="posts-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Format</th>
+              <th>Caption preview</th>
+              <th class="num">Reach</th>
+              <th class="num">Views</th>
+              <th class="num">Likes</th>
+              <th class="num">Saves</th>
+              <th class="num">Shares</th>
+              <th class="num">ER</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>01 May</td>
+              <td><span class="pill reel">Reel</span></td>
+              <td class="caption"><a href="https://www.instagram.com/reel/DXywybCsjfv/" target="_blank">Hot girls don't deserve tummy aches</a></td>
+              <td class="num">42,410</td>
+              <td class="num">58,416</td>
+              <td class="num">293</td>
+              <td class="num">6</td>
+              <td class="num">22</td>
+              <td class="num"><span class="er up">0.79%</span></td>
+            </tr>
+            <tr>
+              <td>16 May</td>
+              <td><span class="pill image">Image</span></td>
+              <td class="caption"><a href="https://www.instagram.com/p/DYZWYdmsIoC/" target="_blank">Piccadilly takeover · Whole Foods</a></td>
+              <td class="num">5,617</td>
+              <td class="num">8,355</td>
+              <td class="num">92</td>
+              <td class="num">23</td>
+              <td class="num">48</td>
+              <td class="num"><span class="er up">3.13%</span></td>
+            </tr>
+            <tr>
+              <td>07 May</td>
+              <td><span class="pill carousel">Carousel</span></td>
+              <td class="caption"><a href="https://www.instagram.com/p/DYCS1CgDHjD/" target="_blank">Whole Foods Kings Road</a></td>
+              <td class="num">1,426</td>
+              <td class="num">3,143</td>
+              <td class="num">131</td>
+              <td class="num">8</td>
+              <td class="num">29</td>
+              <td class="num"><span class="er up">12.13%</span></td>
+            </tr>
+            <tr>
+              <td>22 Apr</td>
+              <td><span class="pill reel">Reel</span></td>
+              <td class="caption"><a href="https://www.instagram.com/reel/DXbUy_8jMyo/" target="_blank">BE LOUD · yoga ball · pink wig</a></td>
+              <td class="num">2,823</td>
+              <td class="num">3,891</td>
+              <td class="num">124</td>
+              <td class="num">1</td>
+              <td class="num">6</td>
+              <td class="num"><span class="er up">4.82%</span></td>
+            </tr>
+            <tr>
+              <td>27 Apr</td>
+              <td><span class="pill reel">Reel</span></td>
+              <td class="caption"><a href="https://www.instagram.com/reel/DXof2opDDsE/" target="_blank">LIFE TIP · don't tie balloons</a></td>
+              <td class="num">17,662</td>
+              <td class="num">26,086</td>
+              <td class="num">118</td>
+              <td class="num">3</td>
+              <td class="num">5</td>
+              <td class="num"><span class="er down">0.74%</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="font-size: 11px; color: var(--muted); margin-top: 10px; font-style: italic;">
+          Top-of-funnel reel "Hot girls don't deserve tummy aches" drove 42k reach but mid-tier engagement-rate; "Whole Foods Kings Road" carousel converted reach to 12% ER. Mid-funnel CTAs (Piccadilly, Whole Foods) outperformed pure-vibe content on saves and shares.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>LinkedIn <span class="badge connected" id="li-badge">Live</span> <span class="h-sub" id="li-subhead">XOXO SODA · Windsor.ai · linkedin_organic</span></h3>
+      <div class="metric-grid">
+        <div class="m" id="liFollowersTile"><div class="lbl">Page followers</div><div class="v">5,904</div><div class="d up">↑ 17.4% vs 90d ago</div></div>
+        <div class="m" data-tile="li_gain"><div class="lbl">Follower gain (<span class="period-label">28d</span>)</div><div class="v">+873</div><div class="d up">↑ 48.7% vs prior 28d</div></div>
+        <div class="m" data-tile="li_imp"><div class="lbl">Impressions (<span class="period-label">28d</span>)</div><div class="v">40,613</div><div class="d up">↑ 51.8% vs prior 28d</div></div>
+        <div class="m" data-tile="li_er"><div class="lbl">Engagement rate</div><div class="v">12.29%</div><div class="d up">↑ 1.50pp vs prior 28d</div></div>
+      </div>
+      <div class="metric-grid" style="margin-top: 0;">
+        <div class="m" data-tile="li_likes"><div class="lbl">Likes (<span class="period-label">28d</span>)</div><div class="v">1,149</div><div class="d up">↑ 110% vs prior 28d</div></div>
+        <div class="m" data-tile="li_comm"><div class="lbl">Comments (<span class="period-label">28d</span>)</div><div class="v">61</div><div class="d up">↑ 17.3% vs prior 28d</div></div>
+        <div class="m" data-tile="li_shares"><div class="lbl">Shares (<span class="period-label">28d</span>)</div><div class="v">38</div><div class="d up">↑ 280% vs prior 28d</div></div>
+        <div class="m" data-tile="li_clicks"><div class="lbl">Clicks (<span class="period-label">28d</span>)</div><div class="v">3,744</div><div class="d up">↑ 64.4% vs prior 28d</div></div>
+      </div>
+      <h4 style="margin: 20px 0 8px; font-family: var(--display); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">Daily impressions + follower gain (<span class="period-label">28d</span>) ✦</h4>
+      <div class="chart-wrap tall"><canvas id="liReachChart"></canvas></div>
+      <div class="posts-section">
+        <h4>Top posts (last 28d) — sorted by engagement rate ★</h4>
+        <table class="posts-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Format</th>
+              <th>Caption preview</th>
+              <th class="num">Impressions</th>
+              <th class="num">Likes</th>
+              <th class="num">Comments</th>
+              <th class="num">Clicks</th>
+              <th class="num">ER</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>15 May</td>
+              <td><span class="pill carousel">Multi</span></td>
+              <td class="caption"><a href="https://www.linkedin.com/feed/update/urn:li:ugcPost:7460992912701530112" target="_blank">London Coffee Festival Day 1</a></td>
+              <td class="num">3,805</td>
+              <td class="num">178</td>
+              <td class="num">7</td>
+              <td class="num">1,241</td>
+              <td class="num"><span class="er up">37.53%</span></td>
+            </tr>
+            <tr>
+              <td>07 May</td>
+              <td><span class="pill carousel">Multi</span></td>
+              <td class="caption"><a href="https://www.linkedin.com/feed/update/urn:li:ugcPost:7458112441307058176" target="_blank">Whole Foods Kings Road display</a></td>
+              <td class="num">2,031</td>
+              <td class="num">91</td>
+              <td class="num">4</td>
+              <td class="num">540</td>
+              <td class="num"><span class="er up">31.31%</span></td>
+            </tr>
+            <tr>
+              <td>28 Apr</td>
+              <td><span class="pill carousel">Multi</span></td>
+              <td class="caption"><a href="https://www.linkedin.com/feed/update/urn:li:ugcPost:7450493355018543104" target="_blank">Kyoho Grape launch party recap</a></td>
+              <td class="num">1,861</td>
+              <td class="num">76</td>
+              <td class="num">2</td>
+              <td class="num">399</td>
+              <td class="num"><span class="er up">25.79%</span></td>
+            </tr>
+            <tr>
+              <td>30 Apr</td>
+              <td><span class="pill carousel">Multi</span></td>
+              <td class="caption"><a href="https://www.linkedin.com/feed/update/urn:li:ugcPost:7454559219262853120" target="_blank">NEW XO Whip van · Ireland</a></td>
+              <td class="num">3,120</td>
+              <td class="num">106</td>
+              <td class="num">5</td>
+              <td class="num">494</td>
+              <td class="num"><span class="er up">19.46%</span></td>
+            </tr>
+            <tr>
+              <td>07 May</td>
+              <td><span class="pill carousel">Multi</span></td>
+              <td class="caption"><a href="https://www.linkedin.com/feed/update/urn:li:ugcPost:7458127169022697473" target="_blank">Auchan · France nationwide</a></td>
+              <td class="num">1,350</td>
+              <td class="num">46</td>
+              <td class="num">3</td>
+              <td class="num">121</td>
+              <td class="num"><span class="er up">12.74%</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="font-size: 11px; color: var(--muted); margin-top: 10px; font-style: italic;">
+          LinkedIn pattern is the opposite of IG: multi-image retail/expansion announcements drive the strongest engagement and CTRs (London Coffee Fest Day 1 generated 1,241 clicks alone). Distribution wins, partnership shoutouts, and Whole Foods/Sainsbury's milestones outperform brand vibe posts here.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>TikTok <span class="badge connected" id="tt-badge">Live</span> <span class="h-sub" id="tt-subhead">@xoxo.soda · Windsor.ai · tiktok_organic</span></h3>
+      <div class="metric-grid">
+        <div class="m" id="ttFollowersTile"><div class="lbl">Followers</div><div class="v">--</div><div class="d">tiktok_organic syncing</div></div>
+        <div class="m" data-tile="tt_growth"><div class="lbl">Follower gain (<span class="period-label">28d</span>)</div><div class="v">--</div><div class="d">syncing</div></div>
+        <div class="m" data-tile="tt_views"><div class="lbl">Unique video viewers (<span class="period-label">28d</span>)</div><div class="v">--</div><div class="d">syncing</div></div>
+        <div class="m" data-tile="tt_engaged"><div class="lbl">Engaged audience (<span class="period-label">28d</span>)</div><div class="v">--</div><div class="d">syncing</div></div>
+      </div>
+      <div class="metric-grid" style="margin-top: 0;">
+        <div class="m" data-tile="tt_likes"><div class="lbl">Likes (<span class="period-label">28d</span>)</div><div class="v">--</div><div class="d">syncing</div></div>
+        <div class="m" data-tile="tt_comments"><div class="lbl">Comments (<span class="period-label">28d</span>)</div><div class="v">--</div><div class="d">syncing</div></div>
+        <div class="m" data-tile="tt_shares"><div class="lbl">Shares (<span class="period-label">28d</span>)</div><div class="v">--</div><div class="d">syncing</div></div>
+        <div class="m" data-tile="tt_profile"><div class="lbl">Profile views (<span class="period-label">28d</span>)</div><div class="v">--</div><div class="d">syncing</div></div>
+      </div>
+      <div class="metric-grid" style="margin-top: 0;">
+        <div class="m" data-tile="tt_net"><div class="lbl">Net followers (<span class="period-label">28d</span>)</div><div class="v">--</div><div class="d">gained − lost</div></div>
+        <div class="m" data-tile="tt_lost"><div class="lbl">Lost followers (<span class="period-label">28d</span>)</div><div class="v">--</div><div class="d">syncing</div></div>
+        <div class="m" data-tile="tt_bio"><div class="lbl">Bio link clicks (<span class="period-label">28d</span>)</div><div class="v">--</div><div class="d">syncing</div></div>
+        <div class="m" data-tile="tt_er"><div class="lbl">Engagement rate (<span class="period-label">28d</span>)</div><div class="v">--</div><div class="d">(likes+comments+shares)/views</div></div>
+      </div>
+      <h4 style="margin: 20px 0 8px; font-family: var(--display); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">Daily unique video viewers + follower gain (<span class="period-label">28d</span>) ✦</h4>
+      <div class="chart-wrap tall"><canvas id="tiktokChart"></canvas></div>
+
+      <h4 style="margin: 24px 0 8px; font-family: var(--display); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">Audience (<span class="period-label">28d</span>) ◐</h4>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 8px;">
+        <div>
+          <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 800; margin-bottom: 6px;">Age</div>
+          <div class="chart-wrap" style="height: 160px;"><canvas id="ttAgeChart"></canvas></div>
+        </div>
+        <div>
+          <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 800; margin-bottom: 6px;">Gender</div>
+          <div class="chart-wrap" style="height: 160px;"><canvas id="ttGenderChart"></canvas></div>
+        </div>
+        <div>
+          <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 800; margin-bottom: 6px;">Country</div>
+          <div class="chart-wrap" style="height: 160px;"><canvas id="ttCountryChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="posts-section">
+        <h4>Top videos (last 28d) — live from tiktok_organic</h4>
+        <table class="posts-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Caption</th>
+              <th class="num">Reach</th>
+              <th class="num">Likes</th>
+              <th class="num">Comments</th>
+              <th class="num">Shares</th>
+              <th class="num">Saves</th>
+              <th class="num">Full watch</th>
+              <th>Link</th>
+            </tr>
+          </thead>
+          <tbody id="tiktok-top-videos">
+            <tr class="empty-row"><td colspan="9">syncing…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- D2C -->
+  <div class="section" data-section="shopify">
+    <h2>D2C ♡</h2>
+    <div class="h-sub">Combined view across Shopify, Amazon DE, Amazon GB, and TikTok Shop (when live). Channel contributions, then detail per channel.</div>
+
+    <!-- Combined view -->
+    <div class="card" style="background: var(--pink-soft);">
+      <h3>Total D2C performance <span class="badge connected">Live</span> <span class="h-sub">28d · all channels combined</span></h3>
+      <div class="metric-grid">
+        <div class="m" style="background: var(--paper);" data-tile="d2c_rev_card"><div class="lbl">Total revenue</div><div class="v">£25,103</div><div class="d up">↑ 73.2% vs prior 28d</div></div>
+        <div class="m" style="background: var(--paper);" data-tile="d2c_units_card"><div class="lbl">Total units sold</div><div class="v">851</div><div class="d up">↑ 26.4% vs prior 28d</div></div>
+        <div class="m" style="background: var(--paper);" data-tile="d2c_split"><div class="lbl">Channel split</div><div class="v">25% / 55% / 20%</div><div class="d">Shopify / Amazon / TikTok</div></div>
+        <div class="m" style="background: var(--paper);"><div class="lbl">Best channel</div><div class="v" style="font-size: 14px;">Amazon GB</div><div class="d">37% · #1 of 4 channels</div></div>
+      </div>
+      <h4 style="margin: 20px 0 8px; font-family: var(--display); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">Channel contribution (<span class="period-label">28d</span>) ✦</h4>
+      <div class="chart-wrap tall"><canvas id="channelMixChart"></canvas></div>
+      <h4 style="margin: 20px 0 8px; font-family: var(--display); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">Daily revenue by channel (28d, ex-VAT)</h4>
+      <div class="chart-wrap tall"><canvas id="d2cDailyChart"></canvas></div>
+      <h4 style="margin: 20px 0 8px; font-family: var(--display); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">Monthly D2C revenue (last 12 calendar months, ex-VAT) ✦</h4>
+      <div class="chart-wrap tall" style="height: 320px;"><canvas id="d2cMonthlyChart"></canvas></div>
+    </div>
+
+    <!-- Shopify breakdown -->
+    <div class="card">
+      <h3>Shopify <span class="badge connected" id="shopify-badge">Live</span> <span class="h-sub" id="shopify-subhead">drinkxoxo.com · GBP · 26% of D2C</span></h3>
+      <div class="metric-grid">
+        <div class="m" data-tile="shopify_rev"><div class="lbl">Revenue (<span class="period-label">28d</span>)</div><div class="v">£5,235</div><div class="d down">↓ 19.0% vs prior 28d</div></div>
+        <div class="m" data-tile="shopify_orders"><div class="lbl">Orders (<span class="period-label">28d</span>)</div><div class="v">163</div><div class="d down">↓ 3.6% vs prior 28d</div></div>
+        <div class="m" data-tile="shopify_aov"><div class="lbl">AOV (<span class="period-label">28d</span>)</div><div class="v">£26.82</div><div class="d down">↓ 16.9% vs prior £32.29</div></div>
+        <div class="m" data-tile="shopify_sessions"><div class="lbl">Sessions (<span class="period-label">28d</span>)</div><div class="v">8,860</div><div class="d down">↓ 8.9% vs prior 9,729</div></div>
+      </div>
+      <div class="metric-grid" style="margin-top: 0;">
+        <div class="m" data-tile="shopify_conv"><div class="lbl">Conversion rate</div><div class="v">1.50%</div><div class="d up">↑ 8.9% vs prior 1.38%</div></div>
+        <div class="m" data-tile="shopify_returning"><div class="lbl">Returning customer rate</div><div class="v">39.7%</div><div class="d up">↑ 10.8pp vs prior 28.9%</div></div>
+        <div class="m" id="topSkuTile"><div class="lbl">Top SKU (<span class="period-label">28d</span>)</div><div class="v" style="font-size: 14px;">Kyoho Grape LE</div><div class="d">£806 · 40 orders</div></div>
+        <div class="m" id="planTile"><div class="lbl">Plan</div><div class="v" style="font-size: 14px;">Advanced</div><div class="d">GBP · UK timezone</div></div>
+      </div>
+      <h4 style="margin: 20px 0 8px; font-family: var(--display); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">Daily revenue (<span class="period-label">28d</span>) ♡</h4>
+      <div class="chart-wrap tall"><canvas id="shopifyRevenueChart"></canvas></div>
+      <h4 style="margin: 24px 0 8px; font-family: var(--display); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">Top 6 SKUs (<span class="period-label">28d</span>) ✦</h4>
+      <div class="chart-wrap tall"><canvas id="topSkusChart"></canvas></div>
+    </div>
+
+    <!-- Amazon breakdown -->
+    <div class="card">
+      <h3>Amazon <span class="badge connected" id="amz-badge">Snapshot</span> <span class="h-sub" id="amz-subhead">Seller Central DE + GB · Windsor.ai · 74% of D2C</span></h3>
+      <div class="metric-grid">
+        <div class="m" data-tile="amz_rev"><div class="lbl">Total revenue (<span class="period-label">28d</span>)</div><div class="v">£14,837</div><div class="d up">↑ 34.7% vs prior 28d</div></div>
+        <div class="m" data-tile="amz_units"><div class="lbl">Total units (<span class="period-label">28d</span>)</div><div class="v">689</div><div class="d up">↑ 36.7% vs prior 504</div></div>
+        <div class="m" data-tile="amz_sessions"><div class="lbl">Total sessions (<span class="period-label">28d</span>)</div><div class="v">7,874</div><div class="d up">↑ 39.2% vs prior 5,658</div></div>
+        <div class="m" data-tile="amz_conv"><div class="lbl">Conversion (units/sess)</div><div class="v">8.7%</div><div class="d down">↓ 0.2pp vs prior 8.9%</div></div>
+      </div>
+      <h4 style="margin: 20px 0 8px; font-family: var(--display); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">By marketplace (<span class="period-label">28d</span>) ♡</h4>
+      <table class="comp-table" style="margin-bottom: 12px;">
+        <thead>
+          <tr>
+            <th>Marketplace</th>
+            <th class="num">Revenue</th>
+            <th class="num">Units</th>
+            <th class="num">Sessions</th>
+            <th class="num">£/unit</th>
+            <th class="num">Share</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr id="amz-row-gb">
+            <td><strong>Amazon GB</strong></td>
+            <td class="num"><span class="amz-rev">£10,607</span> <span class="er up amz-rev-delta" style="font-size: 10px;">↑18.8%</span></td>
+            <td class="num"><span class="amz-units">493</span> <span class="er up amz-units-delta" style="font-size: 10px;">↑18.2%</span></td>
+            <td class="num"><span class="amz-sess">4,480</span> <span class="er up amz-sess-delta" style="font-size: 10px;">↑6.9%</span></td>
+            <td class="num amz-perunit">£21.52</td>
+            <td class="num amz-share">53%</td>
+          </tr>
+          <tr id="amz-row-de">
+            <td><strong>Amazon DE</strong></td>
+            <td class="num"><span class="amz-rev">£4,230</span> <span class="er up amz-rev-delta" style="font-size: 10px;">↑103%</span></td>
+            <td class="num"><span class="amz-units">196</span> <span class="er up amz-units-delta" style="font-size: 10px;">↑125%</span></td>
+            <td class="num"><span class="amz-sess">3,394</span> <span class="er up amz-sess-delta" style="font-size: 10px;">↑131%</span></td>
+            <td class="num amz-perunit">£21.58</td>
+            <td class="num amz-share">21%</td>
+          </tr>
+        </tbody>
+      </table>
+      <h4 style="margin: 20px 0 8px; font-family: var(--display); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">Amazon daily revenue (<span class="period-label">28d</span>) ★</h4>
+      <div class="chart-wrap tall"><canvas id="amazonRevenueChart"></canvas></div>
+    </div>
+
+    <!-- TikTok Shop -->
+    <div class="card">
+      <h3>TikTok Shop <span class="badge connected" id="ttshop-badge">Snapshot</span> <span class="h-sub">@xoxo.soda · Windsor.ai · launched 21 Apr 2026 · UK only</span></h3>
+      <div class="metric-grid">
+        <div class="m" data-tile="tt_shop_rev"><div class="lbl">Revenue (<span class="period-label">28d</span>)</div><div class="v">£5,097</div><div class="d up">↑ 58.7% vs prior 7d</div></div>
+        <div class="m"><div class="lbl">D2C share (<span class="period-label">28d</span>)</div><div class="v">20%</div><div class="d up">New channel — ramping</div></div>
+        <div class="m"><div class="lbl">Revenue 7d</div><div class="v">£2,025</div><div class="d up">↑ 58.7% vs prior 7d £1,277</div></div>
+        <div class="m"><div class="lbl">Since launch (21 Apr)</div><div class="v">£5,427</div><div class="d">~6 weeks · ex-VAT</div></div>
+      </div>
+      <h4 style="margin: 20px 0 8px; font-family: var(--display); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">Daily TikTok Shop revenue (<span class="period-label">28d</span>, ex-VAT) ★</h4>
+      <div class="chart-wrap tall"><canvas id="ttShopRevenueChart"></canvas></div>
+      <h4 style="margin: 20px 0 8px; font-family: var(--display); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">Top 6 SKUs by revenue (28d statement data, ex-VAT)</h4>
+      <table class="comp-table" style="margin-bottom: 8px;">
+        <thead>
+          <tr><th>Product</th><th class="num">Revenue (ex-VAT)</th><th class="num">Units</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Variety Pack (12-can)</td><td class="num">£2,902</td><td class="num">483</td></tr>
+          <tr><td>Mix Pack (12-can)</td><td class="num">£1,135</td><td class="num">75</td></tr>
+          <tr><td>Lychee (12-can)</td><td class="num">£292</td><td class="num">34</td></tr>
+          <tr><td>Watermelon (12-can)</td><td class="num">£204</td><td class="num">317 ✦</td></tr>
+          <tr><td>Kyoho Grape (12-can)</td><td class="num">£177</td><td class="num">15</td></tr>
+          <tr><td>Orange (12-can)</td><td class="num">£88</td><td class="num">8</td></tr>
+        </tbody>
+      </table>
+      <div class="notes-box" style="font-size: 11px;">✦ Watermelon 317 units at £204 revenue = heavy flash-sale promotion. Revenue per unit vs full-price sales is not comparable. Statement data reflects settled revenue net of TikTok platform fees.</div>
+    </div>
+  </div>
+
+  <!-- Email (Klaviyo) -->
+  <div class="section" data-section="email">
+    <h2>Email ♡</h2>
+    <div class="h-sub">Klaviyo via Windsor.ai. Campaign-level opens, clicks, revenue and click-to-open with 28d period-over-period delta. Daily email-attributed revenue chart and top 5 campaigns by revenue.</div>
+
+    <div class="card" id="klaviyo-card">
+      <h3>Email performance <span class="badge connected" id="klaviyo-badge">Snapshot</span> <span class="h-sub" id="klaviyo-subhead">Klaviyo · Windsor.ai · campaign-level metrics</span></h3>
+      <div class="metric-grid" id="klaviyo-tiles">
+        <div class="m"><div class="lbl">Opens (<span class="period-label">28d</span>)</div><div class="v">--</div><div class="d">syncing</div></div>
+        <div class="m"><div class="lbl">Clicks (<span class="period-label">28d</span>)</div><div class="v">--</div><div class="d">syncing</div></div>
+        <div class="m"><div class="lbl">Email revenue (<span class="period-label">28d</span>)</div><div class="v">--</div><div class="d">syncing</div></div>
+        <div class="m"><div class="lbl">Click-to-open</div><div class="v">--</div><div class="d">syncing</div></div>
+      </div>
+      <div class="metric-grid" style="margin-top: 0;">
+        <div class="m" id="klaviyo-camps"><div class="lbl">Campaigns sent (<span class="period-label">28d</span>)</div><div class="v">--</div><div class="d">syncing</div></div>
+        <div class="m" id="klaviyo-aov"><div class="lbl">Revenue per opener</div><div class="v">--</div><div class="d">syncing</div></div>
+        <div class="m" id="klaviyo-ctr"><div class="lbl">Click-through rate</div><div class="v">--</div><div class="d">clicks/opens (loose CTR)</div></div>
+        <div class="m" id="klaviyo-share"><div class="lbl">Share of D2C revenue</div><div class="v">--</div><div class="d">email rev / total D2C</div></div>
+      </div>
+      <h4 style="margin: 20px 0 8px; font-family: var(--display); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">Daily email revenue (<span class="period-label">28d</span>) ✦</h4>
+      <div class="chart-wrap tall"><canvas id="klaviyoRevenueChart"></canvas></div>
+      <h4 style="margin: 20px 0 8px; font-family: var(--display); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">Top campaigns (<span class="period-label">28d</span>) by revenue</h4>
+      <table class="comp-table" style="margin-bottom: 8px;">
+        <thead>
+          <tr><th>Campaign</th><th class="num">Opens</th><th class="num">Clicks</th><th class="num">Click rate</th><th class="num">Revenue</th></tr>
+        </thead>
+        <tbody id="klaviyo-top-campaigns">
+          <tr><td colspan="6" style="text-align:center; opacity:0.6;">syncing…</td></tr>
+        </tbody>
+      </table>
+      <div class="posts-section" style="margin-top: 18px;" id="klaviyo-flows-section">
+        <h4>Flow performance (last 28d) — live from klaviyo</h4>
+        <table class="posts-table">
+          <thead>
+            <tr>
+              <th>Flow</th>
+              <th class="num">Recipients</th>
+              <th class="num">Opens</th>
+              <th class="num">Clicks</th>
+              <th class="num">Conversions</th>
+              <th class="num">Open rate</th>
+              <th class="num">Click rate</th>
+              <th class="num">Revenue (ex-VAT)</th>
+            </tr>
+          </thead>
+          <tbody id="klaviyo-flows">
+            <tr><td colspan="8" style="text-align:center; opacity:0.6;">syncing…</td></tr>
+          </tbody>
+        </table>
+        <div style="font-size: 11px; color: var(--muted); margin-top: 10px; font-style: italic;" id="klaviyo-flows-note">
+          Live Klaviyo flows. Revenue shown net of UK VAT (gross / 1.20).
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Competitors -->
+  <div class="section" data-section="competitors">
+    <h2>Category competitors</h2>
+    <div class="h-sub">Living Things, Hip Pop, SuperPop, More Fizi. Manual snapshot scraped <span id="comp-refreshed">21 May 2026</span> - paid Social Blade or Phlanx needed for ongoing trend lines.</div>
+
+    <div class="card">
+      <h3>Instagram follower benchmark <span class="h-sub">May 2026 snapshot</span></h3>
+      <div class="chart-wrap tall"><canvas id="igFollowersChart"></canvas></div>
+    </div>
+
+    <div class="card">
+      <h3>Detailed comparison</h3>
+      <table class="comp-table">
+        <thead>
+          <tr>
+            <th>Brand</th>
+            <th>IG handle</th>
+            <th class="num">IG followers</th>
+            <th>TikTok handle</th>
+            <th class="num">TikTok followers</th>
+            <th>28d growth</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="us">
+            <td>XOXO</td>
+            <td class="handle">@xoxo.soda</td>
+            <td class="num" id="comp-xoxo-ig">10,445</td>
+            <td class="handle">@xoxo.soda</td>
+            <td class="num">--</td>
+            <td class="pending">Live from Windsor</td>
+          </tr>
+          <tr>
+            <td>Living Things</td>
+            <td class="handle">@drinklivingthings</td>
+            <td class="num">24,000</td>
+            <td class="handle">@drinklivingthings</td>
+            <td class="num">--</td>
+            <td class="pending">Manual scrape</td>
+          </tr>
+          <tr>
+            <td>Hip Pop</td>
+            <td class="handle">@drink.hip.pop</td>
+            <td class="num">28,000</td>
+            <td class="handle">@drink_hip_pop</td>
+            <td class="num">3,446</td>
+            <td class="pending">Manual scrape</td>
+          </tr>
+          <tr>
+            <td>SuperPop</td>
+            <td class="handle">@drinksuperpop</td>
+            <td class="num">26,000</td>
+            <td class="handle">@drinksuperpop</td>
+            <td class="num">--</td>
+            <td class="pending">Manual scrape</td>
+          </tr>
+          <tr>
+            <td>More Fizi</td>
+            <td class="handle">@morenutrition.de</td>
+            <td class="num">1,000,000</td>
+            <td class="handle">@morenutrition.de</td>
+            <td class="num">457,800</td>
+            <td class="pending">Parent brand · manual</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Top competitor posts (last 28d)</h3>
+      <table class="posts-table">
+        <thead>
+          <tr>
+            <th>Brand</th>
+            <th>Platform</th>
+            <th>Date</th>
+            <th>Format</th>
+            <th>Caption preview</th>
+            <th class="num">Views</th>
+            <th class="num">Likes</th>
+            <th class="num">Comments</th>
+            <th class="num">Engagement</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="empty-row"><td colspan="9">Connect Socialinsider, Phlanx, or Modash to populate the top competitor posts feed across IG and TikTok</td></tr>
+        </tbody>
+      </table>
+      <div class="connect-box" style="margin-top: 14px;">
+        <div class="ctitle">Recommended tools for competitor post data</div>
+        <div class="cbody">
+          <strong>Socialinsider</strong> (~$82/mo) - cross-platform competitor benchmarks with per-post engagement on IG, TikTok, FB. Cleanest paid option.
+          <strong>Phlanx</strong> - engagement rate only, lighter signal.
+          <strong>Modash</strong> - influencer-flavoured but exposes per-post engagement on any public IG/TikTok account.
+          <strong>Exolyt or Pentos</strong> - TikTok-specific with full post-level metrics including trending sounds and hashtag context.
+          No MCP exists for any of these yet, so initial sync would be CSV import; long-term a custom MCP wrapper is feasible.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Notes on this snapshot</h3>
+      <div class="notes-box">
+        Living Things IG estimate is from May 2026 brand research, not verified live.
+        Hip Pop TikTok is materially smaller than IG (3.4k vs 28k) - they're an IG-first brand.
+        More Fizi is the product line, but social presence lives under parent <strong>More Nutrition</strong> - their TikTok (457k) is one of the largest in the German nutrition category, but the audience is broader than just More Fizi drinkers.
+        SuperPop TikTok confirmed as <strong>@drinksuperpop</strong>.
+        XOXO TikTok confirmed as <strong>@xoxo.soda</strong>.
+      </div>
+    </div>
+  </div>
+
+  <!-- Extended -->
+  <div class="section" data-section="extended">
+    <h2>Extended metrics</h2>
+    <div class="h-sub">Optional layers once core sources are connected. The nice-to-haves that turn a dashboard into a habit.</div>
+    <div class="card-row-3">
+      <div class="card">
+        <h3>Share of voice</h3>
+        <div class="notes-box">Connect <strong>Brand24</strong> ($99-249/month) for category mention tracking and SoV vs Living Things, Hip Pop, SuperPop, More Fizi.</div>
+      </div>
+      <div class="card" id="ttads-card">
+        <h3>TikTok Ads <span class="badge connected" id="ttads-badge">Snapshot</span> <span class="h-sub" id="ttads-subhead">3 ad accounts · Windsor.ai · tiktok</span></h3>
+        <div class="metric-grid" id="ttads-tiles">
+          <div class="m"><div class="lbl">Spend (<span class="period-label">28d</span>)</div><div class="v">--</div><div class="d">syncing</div></div>
+          <div class="m"><div class="lbl">Impressions (<span class="period-label">28d</span>)</div><div class="v">--</div><div class="d">syncing</div></div>
+          <div class="m"><div class="lbl">CPM</div><div class="v">--</div><div class="d">syncing</div></div>
+          <div class="m"><div class="lbl">CTR</div><div class="v">--</div><div class="d">syncing</div></div>
+        </div>
+        <div class="metric-grid" style="margin-top: 0;">
+          <div class="m" id="ttads-clicks"><div class="lbl">Clicks (<span class="period-label">28d</span>)</div><div class="v">--</div><div class="d">syncing</div></div>
+          <div class="m" id="ttads-purch"><div class="lbl">Purchases (<span class="period-label">28d</span>)</div><div class="v">--</div><div class="d">syncing</div></div>
+          <div class="m" id="ttads-shop-rev"><div class="lbl">Ads-attributed Shop revenue (<span class="period-label">28d</span>)</div><div class="v">--</div><div class="d">syncing</div></div>
+          <div class="m" id="ttads-roas"><div class="lbl">ROAS</div><div class="v">--</div><div class="d">syncing</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Cohort retention</h3>
+        <div class="notes-box">Once Shopify is connected, monthly customer cohort retention curves can be computed from order history.</div>
+      </div>
+      <div class="card">
+        <h3>Ad spend vs organic</h3>
+        <div class="notes-box">If Meta Ads and TikTok Ads are added to Supermetrics, paid-versus-organic contribution becomes a single chart.</div>
+      </div>
+      <div class="card">
+        <h3>Competitor ad creative</h3>
+        <div class="notes-box">Connect <strong>Motion Creative Analytics</strong> for Meta Ad Library scraping of Living Things, Hip Pop, SuperPop, and More Fizi creative.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="footer-note">
+      <strong>Build:</strong> v0.7 (22 May 2026) - Email section live, all sales ex-VAT, 12-month D2C revenue chart, TikTok extras isolated. <strong>Data sources.</strong> Owned channels (Instagram, LinkedIn, TikTok) and Shopify show "not connected" placeholders because no aggregator or direct connector is wired up yet. Competitor follower counts are May 2026 snapshots gathered during dashboard build, not live trend data. Once a marketing aggregator (Supermetrics or Windsor.ai) and the Shopify MCP are connected, every "--" card on this page becomes a live number that refreshes on reload.
+    </div>
+    <div class="footer-brand">
+      <div class="footer-tag">Show yourself some love<span class="sup">®</span> <span class="sep">·</span> The soda that loves you back <span class="sep">♡</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<script>
+(function() {
+  // Brand palette for charts
+  // 12-month state. Keyed by YYYY-MM, populated by Shopify + Amazon loaders. TikTok Shop is zero until connected.
+  const MONTHLY_12 = { shopify: {}, amazon: {}, ttshop: {} };
+
+  const BRAND = {
+    red: '#F40002',
+    green: '#00D707',
+    yellow: '#F8D325',
+    orange: '#FF4E00',
+    purple: '#6A1EE2',
+    pink: '#FFB9E6',
+    ink: '#0D0D0D',
+    muted: '#bdbdbd'
+  };
+
+  // Set Chart.js global defaults to brand style
+  if (typeof Chart !== 'undefined') {
+    Chart.defaults.font.family = '"Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif';
+    Chart.defaults.font.weight = '700';
+    Chart.defaults.color = BRAND.ink;
+  }
+
+  // Per-period SKU data — verified 28 May 2026; overwritten by live Shopify loader on each open
+  let SKU_DATA = {
+    7:  { labels: ['Variety Pack','Kyoho Grape LE','Watermelon','Lychee','Tropical','Ginger & Lemon'], values: [180,110,90,85,75,55], orders: [7,5,4,4,3,2] },
+    28: { labels: ['Variety Pack','Kyoho Grape LE','Lychee','Watermelon','Tropical','Ginger & Lemon'], values: [1322.25,646.66,551.58,532.37,430.94,349.91], orders: [67,36,27,29,26,18] },
+    90: { labels: ['Variety Pack','Lychee','Watermelon','Tropical','Kyoho Grape LE','Ginger & Lemon'], values: [4200,2800,2600,2400,2100,1800], orders: [180,110,102,95,87,75] }
+  };
+
+  // Refreshed timestamp
+  const stamp = new Date();
+  document.getElementById('refreshed').textContent = 'Refreshed ' + stamp.toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+  // Tabs
+  const tabs = document.getElementById('tabs');
+  const sections = document.querySelectorAll('.section');
+  tabs.addEventListener('click', (e) => {
+    if (e.target.tagName !== 'BUTTON') return;
+    const t = e.target.getAttribute('data-tab');
+    tabs.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === e.target));
+    sections.forEach(s => s.classList.toggle('active', s.getAttribute('data-section') === t));
+    try { localStorage.setItem('xoxo-dash-tab', t); } catch(e) {}
+  });
+  try {
+    const saved = localStorage.getItem('xoxo-dash-tab');
+    if (saved) {
+      const btn = tabs.querySelector(`button[data-tab="${saved}"]`);
+      if (btn) btn.click();
+    }
+  } catch(e) {}
+
+  // === PERIOD DATA LAYER ===
+  // Each tile has values for 7d, 28d, 90d periods plus comparison deltas.
+  // Format: [value_html, delta_class, delta_html] - delta_class is "up"/"down"/""
+  const TILE = {
+    d2c_rev:        { 7: ["£7,380","up","↑ 12.9% vs prior £6,536 (3-channel)"], 28: ["£25,103","up","↑ 73.2% vs prior £14,490 — TikTok Shop added"], 90: ["£57,089","up","TikTok Shop from Apr 21 — ramp included"] },
+    d2c_rev_card:   { 7: ["£7,380","up","↑ 12.9% vs prior £6,536 (3-channel)"], 28: ["£25,103","up","↑ 73.2% vs prior £14,490 — TikTok Shop added"], 90: ["£57,089","up","TikTok Shop from Apr 21 — ramp included"] },
+    d2c_units:      { 7: ["--","",""], 28: ["--","",""], 90: ["--","",""] },
+    d2c_units_card: { 7: ["--","",""], 28: ["--","",""], 90: ["--","",""] },
+    d2c_split:      { 7: ["11% / 61% / 27%","","Shopify / Amazon / TikTok Shop"], 28: ["25% / 55% / 20%","","Shopify / Amazon / TikTok Shop"], 90: ["31% / 59% / 10%","","Shopify / Amazon / TikTok"] },
+    tt_shop_rev:    { 7: ["£2,025","up","↑ 58.7% vs prior 7d (£1,277)"], 28: ["£5,097","up","Launched 21 Apr — 6 weeks of data"], 90: ["£5,427","up","Full channel since launch 21 Apr"] },
+    shopify_rev:    { 7: ["£847","down","↓ 63.6% vs prior 7d (spike week)"], 28: ["£6,310","up","↑ 6.2% vs prior £5,939"], 90: ["£17,858","up","90d cumulative"] },
+    shopify_orders: { 7: ["27","",""], 28: ["186","","£28.18 AOV"], 90: ["519","",""] },
+    shopify_aov:    { 7: ["£31.37","","7d"], 28: ["£28.18","","28d"], 90: ["--","",""] },
+    shopify_sessions:  { 7: ["--","",""], 28: ["--","",""], 90: ["--","",""] },
+    shopify_conv:   { 7: ["--","",""], 28: ["--","",""], 90: ["--","",""] },
+    shopify_returning: { 7: ["--","",""], 28: ["--","",""], 90: ["--","",""] },
+    amz_rev:        { 7: ["£4,508","up","↑ 54.9% vs prior £2,908"], 28: ["£13,696","up","↑ 66.6% vs prior £8,221"], 90: ["£33,804","up","DE launched Apr 6 — ramp included"] },
+    amz_units:      { 7: ["--","",""], 28: ["--","",""], 90: ["--","",""] },
+    amz_sessions:   { 7: ["--","",""], 28: ["--","",""], 90: ["--","",""] },
+    amz_conv:       { 7: ["--","",""], 28: ["--","",""], 90: ["--","",""] },
+    ig_reach:       { 7: ["23,518","down","↓ 11.5% vs prior 7d (26,571)"], 28: ["101,253","down","↓ 40.2% vs prior (Apr viral peak 169,482)"], 90: ["392,730","","90d cumulative reach"] },
+    ig_inter:       { 7: ["514","down","↓ 14.9% vs prior 7d (604)"], 28: ["4,321","down","↓ 16.6% vs prior (Apr peak 5,179)"], 90: ["12,871","","90d cumulative"] },
+    ig_er:          { 7: ["2.19%","","7d blended"], 28: ["4.27%","","28d blended"], 90: ["3.28%","","90d blended"] },
+    ig_posts:       { 7: ["5","","reels + carousels"], 28: ["20","","May posting period"], 90: ["~65","","90d estimate"] },
+    ig_likes:       { 7: ["~250","",""], 28: ["2,362","","avg 118/post"], 90: ["--","",""] },
+    ig_shares:      { 7: ["~80","",""], 28: ["647","","avg 32/post"], 90: ["--","",""] },
+    ig_saves:       { 7: ["--","",""], 28: ["--","",""], 90: ["--","",""] },
+    li_gain:        { 7: ["+47","","7d organic gain"], 28: ["+501","","28d gain (est. 6,490 total)"], 90: ["--","","prior period unavailable"] },
+    li_imp:         { 7: ["7,388","","7d impressions"], 28: ["44,934","","28d impressions"], 90: ["--","","prior period unavailable"] },
+    li_er:          { 7: ["--","",""], 28: ["--","",""], 90: ["--","",""] },
+    li_likes:       { 7: ["--","",""], 28: ["--","",""], 90: ["--","",""] },
+    li_comm:        { 7: ["--","",""], 28: ["--","",""], 90: ["--","",""] },
+    li_shares:      { 7: ["--","",""], 28: ["--","",""], 90: ["--","",""] },
+    li_clicks:      { 7: ["--","",""], 28: ["--","","click_count unavailable"], 90: ["--","",""] },
+    tt_growth:      { 7: ["+470","","7d gain (est. 6,801 total)"], 28: ["+2,224","","28d gain"], 90: ["--","","No 90d data"] },
+    tt_views:       { 7: ["11,405","","7d unique viewers"], 28: ["128,030","","28d unique viewers"], 90: ["--","","No 90d data"] },
+    tt_engaged:     { 7: ["--","",""], 28: ["--","",""], 90: ["--","",""] },
+    tt_likes:       { 7: ["--","",""], 28: ["--","",""], 90: ["--","",""] },
+    tt_comments:    { 7: ["--","",""], 28: ["--","",""], 90: ["--","",""] },
+    tt_shares:      { 7: ["--","",""], 28: ["--","",""], 90: ["--","",""] },
+    tt_profile:     { 7: ["--","",""], 28: ["--","",""], 90: ["--","",""] },
+    tt_net:         { 7: ["+470","","7d"], 28: ["+2,224","","28d net gain"], 90: ["--","",""] },
+    tt_lost:        { 7: ["--","",""], 28: ["--","",""], 90: ["--","",""] },
+    tt_bio:         { 7: ["--","",""], 28: ["--","",""], 90: ["--","",""] },
+    tt_er:          { 7: ["--","",""], 28: ["--","",""], 90: ["--","",""] }
+  };
+
+  // Daily chart data per period - thunks so they resolve at call time (data defined later)
+  const CHART = {
+    shopifyRev: {
+      7: () => d2cData28.slice(-7).map(d => [d[0], d[1]]),
+      28: () => d2cData28.map(d => [d[0], d[1]]),
+      90: () => d2cData90.map(d => [d[0], d[1]])
+    },
+    amz: {
+      7: () => d2cData28.slice(-7).map(d => [d[0], d[2], d[3]]),
+      28: () => d2cData28.map(d => [d[0], d[2], d[3]]),
+      90: () => d2cData90.map(d => [d[0], d[2], d[3]])
+    },
+    ig: {
+      7: () => igDaily.slice(-7),
+      28: () => igDaily,
+      90: () => igDaily90
+    },
+    li: {
+      7: () => liDaily.slice(-6),
+      28: () => liDaily,
+      90: () => liDaily
+    },
+    d2cDaily: {
+      7: () => [["05-21",177.79,293.04,550.38],["05-22",275.99,236.78,432.21],["05-23",403.18,190.59,251.7],["05-24",216.19,195.5,319.23],["05-25",583.2,263.96,640.77],["05-26",340.77,288.15,342.85],["05-27",62.38,193.4,684.32]],
+      28: () => d2cData28,
+      90: () => d2cData90
+    },
+    channelMix: {
+      7: () => ({ shopify: 847, gb: 2918, de: 1590, tt: 2025, total: 7380 }),
+      28: () => ({ shopify: 6310, gb: 9338, de: 4358, tt: 5097, total: 25103 }),
+      90: () => ({ shopify: 17858, gb: 26349, de: 7454, tt: 5427, total: 57089 })
+    }
+  };
+
+  let currentPeriod = '28';
+  let chartInstances = {};
+
+  function applyPeriod(p) {
+    currentPeriod = p;
+    // Update period labels everywhere
+    document.querySelectorAll('.period-label').forEach(el => el.textContent = p + 'd');
+    // Update tiles
+    document.querySelectorAll('[data-tile]').forEach(tile => {
+      const key = tile.getAttribute('data-tile');
+      const data = TILE[key] && TILE[key][p];
+      if (!data) return;
+      const [val, dCls, dHtml] = data;
+      const vEl = tile.querySelector('.v, .val');
+      const dEl = tile.querySelector('.d, .delta');
+      if (vEl) vEl.textContent = val;
+      if (dEl) {
+        dEl.className = (tile.querySelector('.delta') ? 'delta ' : 'd ') + dCls;
+        dEl.innerHTML = dHtml;
+      }
+    });
+    // Re-render charts where 90d falls back to 28d data
+    refreshCharts(p);
+  }
+
+  function refreshCharts(p) {
+    const chartConfigs = [
+      { id: 'shopifyRevenueChart', dataKey: 'shopifyRev' },
+      { id: 'amazonRevenueChart', dataKey: 'amz' },
+      { id: 'igReachChart', dataKey: 'ig' },
+      { id: 'liReachChart', dataKey: 'li' },
+      { id: 'd2cDailyChart', dataKey: 'd2cDaily' }
+    ];
+    chartConfigs.forEach(cfg => {
+      const inst = Chart.getChart(cfg.id);
+      if (!inst) return;
+      const thunk = (CHART[cfg.dataKey][p] || CHART[cfg.dataKey][28]);
+      const newData = thunk();
+      inst.data.labels = newData.map(d => d[0]);
+      if (cfg.dataKey === 'shopifyRev') {
+        inst.data.datasets[0].data = newData.map(d => d[1]);
+      } else if (cfg.dataKey === 'amz') {
+        inst.data.datasets[0].data = newData.map(d => d[2]); // GB
+        inst.data.datasets[1].data = newData.map(d => d[1]); // DE
+      } else if (cfg.dataKey === 'ig') {
+        inst.data.datasets[0].data = newData.map(d => d[1]);
+        inst.data.datasets[1].data = newData.map(d => d[2]);
+      } else if (cfg.dataKey === 'li') {
+        inst.data.datasets[0].data = newData.map(d => d[1]);
+        inst.data.datasets[1].data = newData.map(d => d[2]);
+      } else if (cfg.dataKey === 'd2cDaily') {
+        inst.data.datasets[0].data = newData.map(d => d[1]); // Shopify
+        inst.data.datasets[1].data = newData.map(d => d[3]); // Amazon GB
+        inst.data.datasets[2].data = newData.map(d => d[2]); // Amazon DE
+        if (inst.data.datasets[3]) inst.data.datasets[3].data = newData.map(d => d[4] || 0); // TikTok Shop
+      }
+      inst.update('none');
+    });
+    // Channel mix doughnut
+    const mixInst = Chart.getChart('channelMixChart');
+    if (mixInst) {
+      const mix = CHART.channelMix[p] ? CHART.channelMix[p]() : CHART.channelMix[28]();
+      mixInst.data.datasets[0].data = [mix.gb, mix.de, mix.shopify, mix.tt || 0];
+      mixInst.update('none');
+    }
+    // Top SKUs chart
+    const skuInst = Chart.getChart('topSkusChart');
+    if (skuInst) {
+      const d = SKU_DATA[p] || SKU_DATA[28];
+      skuInst.data.labels = d.labels;
+      skuInst.data.datasets[0].data = d.values;
+      skuInst.update('none');
+      const topTile = document.getElementById('topSkuTile');
+      if (topTile) {
+        const vEl = topTile.querySelector('.v'); const dEl = topTile.querySelector('.d');
+        if (vEl) vEl.textContent = d.labels[0];
+        if (dEl) dEl.textContent = fmtGBP(d.values[0], 0) + ' · ' + d.orders[0] + ' orders';
+      }
+    }
+  }
+
+  // Date range toggle
+  const dr = document.getElementById('daterange');
+  dr.addEventListener('click', (e) => {
+    if (e.target.tagName !== 'BUTTON') return;
+    dr.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === e.target));
+    const p = e.target.getAttribute('data-range');
+    try { localStorage.setItem('xoxo-dash-range', p); } catch(e) {}
+    applyPeriod(p);
+  });
+  try {
+    const saved = localStorage.getItem('xoxo-dash-range');
+    if (saved && ['7','28','90'].includes(saved)) {
+      const btn = dr.querySelector(`button[data-range="${saved}"]`);
+      if (btn) {
+        dr.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+        // Defer applyPeriod until after charts render
+        setTimeout(() => applyPeriod(saved), 50);
+      }
+    }
+  } catch(e) {}
+
+  // Competitor IG followers chart - brand colors
+  const igCtx = document.getElementById('igFollowersChart');
+  if (igCtx) {
+    new Chart(igCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Hip Pop', 'SuperPop', 'Living Things', 'XOXO', 'More Fizi*'],
+        datasets: [{
+          label: 'Instagram followers',
+          data: [28000, 26000, 24000, 10445, 0],
+          backgroundColor: [BRAND.purple, BRAND.orange, BRAND.green, BRAND.red, BRAND.yellow],
+          borderColor: BRAND.ink,
+          borderWidth: 2,
+          borderRadius: 8,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: BRAND.ink,
+            titleFont: { weight: '900', size: 12 },
+            bodyFont: { weight: '700', size: 12 },
+            padding: 10,
+            cornerRadius: 8,
+            callbacks: {
+              label: (ctx) => ctx.parsed.y === 0 ? 'Parent brand only - product handle not separated' : ctx.parsed.y.toLocaleString() + ' followers'
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { color: BRAND.ink, font: { weight: '800', size: 11 }, callback: (v) => (v >= 1000 ? (v/1000) + 'k' : v) },
+            grid: { color: '#e9e6dd' }
+          },
+          x: {
+            ticks: { color: BRAND.ink, font: { weight: '900', size: 12 } },
+            grid: { display: false }
+          }
+        }
+      }
+    });
+  }
+
+  // Shopify revenue chart - LIVE Shopify data, 28d daily
+  const revData = [["06 May",133.19],["07 May",223.74],["08 May",93.11],["09 May",233.22],["10 May",137.93],["11 May",196.75],["12 May",96.20],["13 May",342.79],["14 May",104.62],["15 May",148.78],["16 May",232.18],["17 May",196.66],["18 May",112.79],["19 May",532.80],["20 May",326.68],["21 May",177.79],["22 May",275.99],["23 May",403.18],["24 May",216.19],["25 May",583.20],["26 May",340.77],["27 May",62.38],["28 May",238.77],["29 May",105.75],["30 May",174.89],["31 May",125.94],["01 Jun",72.00],["02 Jun",67.18]];
+  const revCtx = document.getElementById('shopifyRevenueChart');
+  if (revCtx) {
+    new Chart(revCtx, {
+      type: 'line',
+      data: {
+        labels: revData.map(d => d[0]),
+        datasets: [{
+          label: 'Daily revenue (£)',
+          data: revData.map(d => d[1]),
+          borderColor: BRAND.red,
+          backgroundColor: 'rgba(244, 0, 2, 0.10)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 0,
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: BRAND.red,
+          pointHoverBorderColor: BRAND.ink,
+          pointHoverBorderWidth: 2,
+          borderWidth: 2.5
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: BRAND.ink,
+            titleFont: { weight: '900' },
+            bodyFont: { weight: '700' },
+            padding: 10,
+            cornerRadius: 8,
+            callbacks: { label: (ctx) => '£' + ctx.parsed.y.toFixed(2) }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: '#e9e6dd' },
+            ticks: { color: BRAND.ink, font: { weight: '700' }, callback: (v) => '£' + v }
+          },
+          x: { grid: { display: false }, ticks: { color: BRAND.ink, font: { weight: '700', size: 10 }, maxTicksLimit: 10 } }
+        }
+      }
+    });
+  }
+
+  // IG daily reach + interactions (live from Windsor.ai)
+  const igDaily = [["05-06",1693,46],["05-07",3094,170],["05-08",2711,74],["05-09",2467,14],["05-10",2601,29],["05-11",2115,53],["05-12",5510,788],["05-13",4635,346],["05-14",3309,192],["05-15",2518,239],["05-16",3726,331],["05-17",4061,606],["05-18",6400,87],["05-19",6324,228],["05-20",4684,144],["05-21",3477,96],["05-22",4235,159],["05-23",3515,42],["05-24",3873,58],["05-25",3103,52],["05-26",3684,53],["05-27",2379,103],["05-28",3648,110],["05-29",2904,67],["05-30",3690,97],["05-31",3751,28],["06-01",2623,30],["06-02",4523,79]];
+  const igDaily90 = [["03-05",3428,150],["03-06",12268,156],["03-07",8782,116],["03-08",6126,45],["03-09",1341,22],["03-10",13286,352],["03-11",3789,99],["03-12",4075,153],["03-13",3269,97],["03-14",2273,30],["03-15",2538,24],["03-16",2663,61],["03-17",2843,62],["03-18",2570,59],["03-19",1794,53],["03-20",1691,38],["03-21",1679,20],["03-22",1716,25],["03-23",2772,99],["03-24",1619,48],["03-25",2090,82],["03-26",1410,33],["03-27",1404,15],["03-28",1297,10],["03-29",1450,18],["03-30",1811,68],["03-31",2255,87],["04-01",2741,107],["04-02",3099,135],["04-03",3720,504],["04-04",2831,174],["04-05",3168,53],["04-06",3284,95],["04-07",10913,281],["04-08",6324,516],["04-09",4307,724],["04-10",2851,311],["04-11",3887,370],["04-12",3081,134],["04-13",3407,326],["04-14",2917,125],["04-15",2279,208],["04-16",17443,713],["04-17",16757,219],["04-18",3450,117],["04-19",2601,44],["04-20",4837,103],["04-21",5183,145],["04-22",7406,183],["04-23",2803,57],["04-24",2267,54],["04-25",1702,16],["04-26",1969,26],["04-27",14310,136],["04-28",4003,30],["04-29",2144,69],["04-30",1880,29],["05-01",31565,317],["05-02",12822,93],["05-03",2594,20],["05-04",2477,30],["05-05",2216,64],["05-06",1693,46],["05-07",3094,170],["05-08",2711,74],["05-09",2467,14],["05-10",2601,29],["05-11",2115,53],["05-12",5510,788],["05-13",4635,346],["05-14",3309,192],["05-15",2518,239],["05-16",3726,331],["05-17",4061,606],["05-18",6400,87],["05-19",6324,228],["05-20",4684,144],["05-21",3477,96],["05-22",4235,159],["05-23",3515,42],["05-24",3873,58],["05-25",3103,52],["05-26",3684,53],["05-27",2379,103],["05-28",3648,110],["05-29",2904,67],["05-30",3690,97],["05-31",3751,28],["06-01",2623,30],["06-02",4523,79]];
+  const igReachCtx = document.getElementById('igReachChart');
+  if (igReachCtx) {
+    new Chart(igReachCtx, {
+      data: {
+        labels: igDaily.map(d => d[0]),
+        datasets: [
+          { type: 'bar', label: 'Daily reach', data: igDaily.map(d => d[1]), backgroundColor: 'rgba(244,0,2,0.85)', borderColor: BRAND.ink, borderWidth: 1, yAxisID: 'y' },
+          { type: 'line', label: 'Interactions', data: igDaily.map(d => d[2]), borderColor: BRAND.purple, backgroundColor: 'rgba(106,30,226,0.15)', borderWidth: 2.5, tension: 0.3, pointRadius: 0, pointHoverRadius: 5, yAxisID: 'y1' }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: 'bottom', labels: { color: BRAND.ink, font: { size: 11, weight: '700' } } },
+          tooltip: {
+            backgroundColor: BRAND.ink,
+            titleFont: { weight: '900' },
+            bodyFont: { weight: '700' },
+            padding: 10,
+            cornerRadius: 8
+          }
+        },
+        scales: {
+          y: { type: 'linear', position: 'left', beginAtZero: true, grid: { color: '#e9e6dd' }, ticks: { color: BRAND.red, font: { weight: '700' }, callback: (v) => v >= 1000 ? (v/1000)+'k' : v }, title: { display: true, text: 'Reach', color: BRAND.red, font: { weight: '800', size: 10 } } },
+          y1: { type: 'linear', position: 'right', beginAtZero: true, grid: { display: false }, ticks: { color: BRAND.purple, font: { weight: '700' } }, title: { display: true, text: 'Interactions', color: BRAND.purple, font: { weight: '800', size: 10 } } },
+          x: { grid: { display: false }, ticks: { color: BRAND.ink, font: { weight: '700', size: 10 }, maxTicksLimit: 10 } }
+        }
+      }
+    });
+  }
+
+  // LinkedIn daily impressions + organic follower gain (live from Windsor.ai)
+  const liDaily = [["05-06",768,84],["05-07",3037,79],["05-08",2867,43],["05-09",748,9],["05-10",766,12],["05-11",3213,17],["05-12",1654,27],["05-13",963,20],["05-14",769,20],["05-15",2685,12],["05-16",1196,14],["05-17",1014,7],["05-18",4380,24],["05-19",2625,24],["05-20",3189,23],["05-21",3099,14],["05-22",1243,7],["05-23",478,4],["05-24",1080,7],["05-25",788,7],["05-26",984,11],["05-27",1754,7],["05-28",1367,6],["05-29",952,6],["05-30",415,7],["05-31",436,1],["06-01",719,9],["06-02",1745,0]];
+  const liCtx = document.getElementById('liReachChart');
+  if (liCtx) {
+    new Chart(liCtx, {
+      data: {
+        labels: liDaily.map(d => d[0]),
+        datasets: [
+          { type: 'bar', label: 'Impressions', data: liDaily.map(d => d[1]), backgroundColor: 'rgba(106,30,226,0.85)', borderColor: BRAND.ink, borderWidth: 1, yAxisID: 'y' },
+          { type: 'line', label: 'Organic follower gain', data: liDaily.map(d => d[2]), borderColor: BRAND.red, backgroundColor: 'rgba(244,0,2,0.15)', borderWidth: 2.5, tension: 0.3, pointRadius: 0, pointHoverRadius: 5, yAxisID: 'y1' }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: 'bottom', labels: { color: BRAND.ink, font: { size: 11, weight: '700' } } },
+          tooltip: {
+            backgroundColor: BRAND.ink,
+            titleFont: { weight: '900' },
+            bodyFont: { weight: '700' },
+            padding: 10,
+            cornerRadius: 8
+          }
+        },
+        scales: {
+          y: { type: 'linear', position: 'left', beginAtZero: true, grid: { color: '#e9e6dd' }, ticks: { color: BRAND.purple, font: { weight: '700' }, callback: (v) => v >= 1000 ? (v/1000)+'k' : v }, title: { display: true, text: 'Impressions', color: BRAND.purple, font: { weight: '800', size: 10 } } },
+          y1: { type: 'linear', position: 'right', beginAtZero: true, grid: { display: false }, ticks: { color: BRAND.red, font: { weight: '700' } }, title: { display: true, text: 'New followers', color: BRAND.red, font: { weight: '800', size: 10 } } },
+          x: { grid: { display: false }, ticks: { color: BRAND.ink, font: { weight: '700', size: 10 }, maxTicksLimit: 10 } }
+        }
+      }
+    });
+  }
+
+  // TikTok daily series - populated by Windsor loader
+  const ttDaily = [["05-06",17395,451],["05-07",1476,10],["05-08",1070,5],["05-09",454,6],["05-10",2266,283],["05-11",1244,4],["05-12",2913,5],["05-13",6043,256],["05-14",1228,20],["05-15",602,6],["05-16",365,25],["05-17",2407,239],["05-18",12056,16],["05-19",48971,142],["05-20",7595,140],["05-21",4266,6],["05-22",1529,4],["05-23",1020,60],["05-24",542,61],["05-25",920,9],["05-26",2263,6],["05-27",2262,91],["05-28",2378,9],["05-29",1982,92],["05-30",739,4],["05-31",3687,265],["06-01",357,9],["06-02",0,0]];
+  const ttCtx = document.getElementById('tiktokChart');
+  if (ttCtx) {
+    new Chart(ttCtx, {
+      data: {
+        labels: [],
+        datasets: [
+          { type: 'bar', label: 'Daily unique video viewers', data: [], backgroundColor: 'rgba(255,78,0,0.85)', borderColor: BRAND.ink, borderWidth: 1, yAxisID: 'y' },
+          { type: 'line', label: 'Daily follower gain', data: [], borderColor: BRAND.red, backgroundColor: 'rgba(244,0,2,0.15)', borderWidth: 2.5, tension: 0.3, pointRadius: 0, pointHoverRadius: 5, yAxisID: 'y1' }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: 'bottom', labels: { color: BRAND.ink, font: { size: 11, weight: '700' } } },
+          tooltip: { backgroundColor: BRAND.ink, titleFont: { weight: '900' }, bodyFont: { weight: '700' }, padding: 10, cornerRadius: 8 }
+        },
+        scales: {
+          y: { type: 'linear', position: 'left', beginAtZero: true, grid: { color: '#e9e6dd' }, ticks: { color: BRAND.orange, font: { weight: '700' }, callback: (v) => v >= 1000 ? (v/1000)+'k' : v }, title: { display: true, text: 'Unique viewers', color: BRAND.orange, font: { weight: '800', size: 10 } } },
+          y1: { type: 'linear', position: 'right', beginAtZero: true, grid: { display: false }, ticks: { color: BRAND.red, font: { weight: '700' } }, title: { display: true, text: 'Net followers', color: BRAND.red, font: { weight: '800', size: 10 } } },
+          x: { grid: { display: false }, ticks: { color: BRAND.ink, font: { weight: '700', size: 10 }, maxTicksLimit: 10 } }
+        }
+      }
+    });
+  }
+
+  // Amazon daily data (DE + GB)
+  const amzData = [["05-06",243.16,446.12],["05-07",141.48,298.49],["05-08",71.16,275.69],["05-09",92.92,481.41],["05-10",210.69,298.68],["05-11",147.15,389.69],["05-12",263.93,552.38],["05-13",118.33,343.66],["05-14",266.24,251.02],["05-15",97.33,205.72],["05-16",48.77,321.29],["05-17",89.42,202.91],["05-18",236.62,482.60],["05-19",192.98,297.87],["05-20",142.19,319.29],["05-21",293.04,550.38],["05-22",236.78,432.21],["05-23",190.59,251.70],["05-24",195.50,319.23],["05-25",263.96,640.77],["05-26",288.15,342.85],["05-27",193.40,684.32],["05-28",393.88,620.97],["05-29",337.05,387.26],["05-30",337.45,526.81],["05-31",315.64,363.65],["06-01",362.95,413.44],["06-02",259.10,505.40]];
+
+  // D2C daily combined - [date, shopify, amz_de, amz_gb]
+  const d2cData28 = [["05-06",133.19,243.16,446.12,209.4],["05-07",223.74,141.48,298.49,14.08],["05-08",93.11,71.16,275.69,149.81],["05-09",233.22,92.92,481.41,83.08],["05-10",137.93,210.69,298.68,312.89],["05-11",196.75,147.15,389.69,34.85],["05-12",96.2,263.93,552.38,210.7],["05-13",342.79,118.33,343.66,114.53],["05-14",104.62,266.24,251.02,79.48],["05-15",148.78,97.33,205.72,62.53],["05-16",232.18,48.77,321.29,46.68],["05-17",196.66,89.42,202.91,176.05],["05-18",112.79,236.62,482.6,192.01],["05-19",532.8,192.98,297.87,109.28],["05-20",326.68,142.19,319.29,195.32],["05-21",177.79,293.04,550.38,79.86],["05-22",275.99,236.78,432.21,156.95],["05-23",403.18,190.59,251.7,210.53],["05-24",216.19,195.5,319.23,133.23],["05-25",583.2,263.96,640.77,213.81],["05-26",340.77,288.15,342.85,286.92],["05-27",62.38,193.4,684.32,149.63],["05-28",238.77,393.88,620.97,322.27],["05-29",105.75,337.05,387.26,511.9],["05-30",174.89,337.45,526.81,189.05],["05-31",125.94,315.64,363.65,675.64],["06-01",72.0,362.95,413.44,133.4],["06-02",67.18,259.1,505.4,43.47]];
+  const d2cData90 = [["03-05",417.66,0,298.68,0],["03-06",110.39,0,252.89,0],["03-07",123.58,0,157.68,0],["03-08",510.66,0,275.88,0],["03-09",23.99,0,433.84,0],["03-10",-71.72,0,298.49,0],["03-11",168.63,0,275.88,0],["03-12",135.13,0,111.98,0],["03-13",297.81,0,250.7,0],["03-14",19.2,0,202.91,0],["03-15",43.19,0,227.71,0],["03-16",210.35,0,252.7,0],["03-17",115.16,0,405.74,0],["03-18",131.47,0,275.88,0],["03-19",164.23,0,252.32,0],["03-20",233.21,0,203.27,0],["03-21",85.51,0,385.0,0],["03-22",132.66,0,295.42,0],["03-23",226.43,0,592.69,0],["03-24",28.55,0,384.2,0],["03-25",193.16,0,540.67,0],["03-26",218.36,0,779.45,0],["03-27",187.53,0,544.97,0],["03-28",22.53,0,599.29,0],["03-29",72.69,0,559.76,0],["03-30",355.46,0,274.51,0],["03-31",193.38,0,389.83,0],["04-01",416.12,0,344.66,0],["04-02",270.87,0,340.41,0],["04-03",166.22,0,367.08,0],["04-04",185.83,0,298.49,0],["04-05",221.42,0,113.95,0],["04-06",418.96,145.32,318.7,0],["04-07",424.78,244.27,367.65,0],["04-08",211.16,172.04,526.2,0],["04-09",19.19,121.22,229.71,0],["04-10",185.95,111.98,183.73,0],["04-11",212.96,95.44,183.73,0],["04-12",316.49,144.0,229.14,0],["04-13",256.43,231.67,183.35,0],["04-14",89.77,119.51,137.75,0],["04-15",187.33,146.94,22.99,0],["04-16",124.77,140.88,183.73,0],["04-17",188.39,115.88,205.96,0],["04-18",478.25,97.54,91.96,0],["04-19",44.38,73.05,321.48,0],["04-20",544.98,122.56,205.72,0],["04-21",107.97,94.88,298.3,24.79],["04-22",124.37,71.45,297.5,0],["04-23",117.56,21.97,228.52,0],["04-24",197.93,70.14,160.93,28.17],["04-25",151.14,146.52,229.71,0],["04-26",139.56,138.61,431.84,15.75],["04-27",81.58,98.88,308.94,80.48],["04-28",213.08,97.33,367.27,0],["04-29",156.08,312.94,559.2,0],["04-30",127.15,123.55,647.07,20.18],["05-01",158.37,246.67,318.53,22.08],["05-02",242.39,53.85,414.24,42.12],["05-03",417.72,264.48,424.57,36.5],["05-04",258.15,166.38,584.48,18.25],["05-05",95.99,294.9,763.51,41.12],["05-06",133.19,243.16,446.12,209.4],["05-07",223.74,141.48,298.49,14.08],["05-08",93.11,71.16,275.69,149.81],["05-09",233.22,92.92,481.41,83.08],["05-10",137.93,210.69,298.68,312.89],["05-11",196.75,147.15,389.69,34.85],["05-12",96.2,263.93,552.38,210.7],["05-13",342.79,118.33,343.66,114.53],["05-14",104.62,266.24,251.02,79.48],["05-15",148.78,97.33,205.72,62.53],["05-16",232.18,48.77,321.29,46.68],["05-17",196.66,89.42,202.91,176.05],["05-18",112.79,236.62,482.6,192.01],["05-19",532.8,192.98,297.87,109.28],["05-20",326.68,142.19,319.29,195.32],["05-21",177.79,293.04,550.38,79.86],["05-22",275.99,236.78,432.21,156.95],["05-23",403.18,190.59,251.7,210.53],["05-24",216.19,195.5,319.23,133.23],["05-25",583.2,263.96,640.77,213.81],["05-26",340.77,288.15,342.85,286.92],["05-27",62.38,193.4,684.32,149.63],["05-28",238.77,393.88,620.97,322.27],["05-29",105.75,337.05,387.26,511.9],["05-30",174.89,337.45,526.81,189.05],["05-31",125.94,315.64,363.65,675.64],["06-01",72.0,362.95,413.44,133.4],["06-02",67.18,259.1,505.4,43.47]];
+
+  const ttShopDaily = [["05-06",209.4],["05-07",14.08],["05-08",149.81],["05-09",83.08],["05-10",312.89],["05-11",34.85],["05-12",210.7],["05-13",114.53],["05-14",79.48],["05-15",62.53],["05-16",46.68],["05-17",176.05],["05-18",192.01],["05-19",109.28],["05-20",195.32],["05-21",79.86],["05-22",156.95],["05-23",210.53],["05-24",133.23],["05-25",213.81],["05-26",286.92],["05-27",149.63],["05-28",322.27],["05-29",511.9],["05-30",189.05],["05-31",675.64],["06-01",133.4],["06-02",43.47]];
+
+  // Channel contribution doughnut
+  const mixCtx = document.getElementById('channelMixChart');
+  if (mixCtx) {
+    new Chart(mixCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Amazon GB', 'Amazon DE', 'Shopify', 'TikTok Shop'],
+        datasets: [{
+          data: [9338, 4358, 6310, 5097],
+          backgroundColor: [BRAND.purple, BRAND.orange, BRAND.red, BRAND.yellow],
+          borderColor: BRAND.ink,
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '55%',
+        plugins: {
+          legend: { display: true, position: 'right', labels: { color: BRAND.ink, font: { size: 11, weight: '700' }, padding: 10, boxWidth: 14, generateLabels: (chart) => { const ds = chart.data.datasets[0]; const tot = ds.data.reduce((a,b)=>a+(b>1?b:0),0); return chart.data.labels.map((l,i) => { const v = ds.data[i]; const pct = v > 1 ? ((v/tot)*100).toFixed(0) : 0; return { text: v > 1 ? `${l} (£${Math.round(v).toLocaleString()} · ${pct}%)` : `${l} - 0%`, fillStyle: ds.backgroundColor[i], strokeStyle: ds.borderColor, lineWidth: 1, hidden: false, index: i }; }); } } },
+          tooltip: {
+            backgroundColor: BRAND.ink,
+            titleFont: { weight: '900' },
+            bodyFont: { weight: '700' },
+            padding: 10,
+            cornerRadius: 8,
+            callbacks: { label: (ctx) => ctx.parsed < 1 ? 'Pending launch' : '£' + ctx.parsed.toFixed(0) }
+          }
+        }
+      }
+    });
+  }
+
+
+  // TikTok Shop daily revenue chart
+  const ttShopCtx = document.getElementById('ttShopRevenueChart');
+  if (ttShopCtx) {
+    new Chart(ttShopCtx, {
+      type: 'bar',
+      data: {
+        labels: ttShopDaily.map(d => d[0]),
+        datasets: [{
+          label: 'TikTok Shop',
+          data: ttShopDaily.map(d => d[1]),
+          backgroundColor: BRAND.green,
+          borderColor: BRAND.ink,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: BRAND.ink,
+            titleFont: { weight: '900' },
+            bodyFont: { weight: '700' },
+            padding: 10,
+            cornerRadius: 8,
+            callbacks: { label: (ctx) => '£' + ctx.parsed.y.toFixed(0) + ' ex-VAT' }
+          }
+        },
+        scales: {
+          x: { ticks: { color: BRAND.ink, font: { weight: '700', size: 10 } }, grid: { display: false } },
+          y: { ticks: { color: BRAND.ink, font: { weight: '700', size: 10 }, callback: v => '£'+v }, grid: { color: 'rgba(0,0,0,0.07)' } }
+        }
+      }
+    });
+  }
+
+  // D2C combined daily revenue chart (stacked bars by channel)
+  const d2cCtx = document.getElementById('d2cDailyChart');
+  if (d2cCtx) {
+    new Chart(d2cCtx, {
+      type: 'bar',
+      data: {
+        labels: d2cData28.map(d => d[0]),
+        datasets: [
+          { label: 'Shopify', data: d2cData28.map(d => d[1]), backgroundColor: BRAND.red, borderColor: BRAND.ink, borderWidth: 1, stack: 'rev' },
+          { label: 'Amazon GB', data: d2cData28.map(d => d[3]), backgroundColor: BRAND.purple, borderColor: BRAND.ink, borderWidth: 1, stack: 'rev' },
+          { label: 'Amazon DE', data: d2cData28.map(d => d[2]), backgroundColor: BRAND.orange, borderColor: BRAND.ink, borderWidth: 1, stack: 'rev' },
+          { label: 'TikTok Shop', data: d2cData28.map(d => d[4] || 0), backgroundColor: BRAND.green, borderColor: BRAND.ink, borderWidth: 1, stack: 'rev' }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: 'bottom', labels: { color: BRAND.ink, font: { size: 11, weight: '700' } } },
+          tooltip: {
+            backgroundColor: BRAND.ink,
+            titleFont: { weight: '900' },
+            bodyFont: { weight: '700' },
+            padding: 10,
+            cornerRadius: 8,
+            callbacks: { label: (ctx) => ctx.dataset.label + ': £' + ctx.parsed.y.toFixed(2) }
+          }
+        },
+        scales: {
+          x: { stacked: true, grid: { display: false }, ticks: { color: BRAND.ink, font: { weight: '700', size: 9 }, maxRotation: 60, minRotation: 60 } },
+          y: { stacked: true, beginAtZero: true, grid: { color: '#e9e6dd' }, ticks: { color: BRAND.ink, font: { weight: '700' }, callback: (v) => '£' + v } }
+        }
+      }
+    });
+  }
+
+  // Amazon daily revenue chart (DE vs GB)
+  const amzCtx = document.getElementById('amazonRevenueChart');
+  if (amzCtx) {
+    new Chart(amzCtx, {
+      type: 'line',
+      data: {
+        labels: amzData.map(d => d[0]),
+        datasets: [
+          { label: 'Amazon GB', data: amzData.map(d => d[2]), borderColor: BRAND.purple, backgroundColor: 'rgba(106,30,226,0.10)', fill: true, tension: 0.3, pointRadius: 0, pointHoverRadius: 5, borderWidth: 2.5 },
+          { label: 'Amazon DE', data: amzData.map(d => d[1]), borderColor: BRAND.orange, backgroundColor: 'rgba(255,78,0,0.10)', fill: true, tension: 0.3, pointRadius: 0, pointHoverRadius: 5, borderWidth: 2.5 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: 'bottom', labels: { color: BRAND.ink, font: { size: 11, weight: '700' } } },
+          tooltip: {
+            backgroundColor: BRAND.ink,
+            titleFont: { weight: '900' },
+            bodyFont: { weight: '700' },
+            padding: 10,
+            cornerRadius: 8,
+            callbacks: { label: (ctx) => ctx.dataset.label + ': £' + ctx.parsed.y.toFixed(2) }
+          }
+        },
+        scales: {
+          y: { beginAtZero: true, grid: { color: '#e9e6dd' }, ticks: { color: BRAND.ink, font: { weight: '700' }, callback: (v) => '£' + v } },
+          x: { grid: { display: false }, ticks: { color: BRAND.ink, font: { weight: '700', size: 10 }, maxTicksLimit: 10 } }
+        }
+      }
+    });
+  }
+
+  // Top SKUs chart - LIVE Shopify data
+  const skuCtx = document.getElementById('topSkusChart');
+  if (skuCtx) {
+    new Chart(skuCtx, {
+      type: 'bar',
+      data: {
+        labels: SKU_DATA[28].labels,
+        datasets: [{
+          label: 'Gross sales (£)',
+          data: SKU_DATA[28].values,
+          backgroundColor: [BRAND.purple, BRAND.red, BRAND.pink, BRAND.yellow, BRAND.green, BRAND.orange],
+          borderColor: BRAND.ink,
+          borderWidth: 2,
+          borderRadius: 8,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: BRAND.ink,
+            titleFont: { weight: '900' },
+            bodyFont: { weight: '700' },
+            padding: 10,
+            cornerRadius: 8,
+            callbacks: { label: (ctx) => '£' + ctx.parsed.x.toFixed(2) }
+          }
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            grid: { color: '#e9e6dd' },
+            ticks: { color: BRAND.ink, font: { weight: '700' }, callback: (v) => '£' + v }
+          },
+          y: { grid: { display: false }, ticks: { color: BRAND.ink, font: { weight: '800', size: 11 } } }
+        }
+      }
+    });
+  }
+
+  // ------------------------------------------------------------
+
+  })();
+
+</script>
+</body>
+</html>
